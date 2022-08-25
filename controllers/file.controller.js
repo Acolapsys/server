@@ -35,9 +35,17 @@ class FileController {
           userId: req.user?.id || null,
           parentId: req.query?.parentId || null
         },
-        include: {model: File, as: "children"}
+        include: { model: File, as: "children" }
       });
       return res.json(files);
+    } catch (e) {
+      return res.status(500).json(e);
+    }
+  }
+  async getFileById(req, res) {
+    try {
+      const file = await File.findByPk(req.query.id);
+      return res.json(file);
     } catch (e) {
       return res.status(500).json(e);
     }

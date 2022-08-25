@@ -7,6 +7,7 @@ const router = new Router();
 
 router.post('', authMiddleware, FileController.createDir)
 router.get('', authMiddleware, FileController.getFiles)
+router.get('/file', authMiddleware, FileController.getFileById)
 
 
 module.exports = router;

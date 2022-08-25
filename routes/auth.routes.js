@@ -83,7 +83,7 @@ router.post("/login", async (req, res) => {
         diskSpace: user.diskSpace,
         usedSpace: user.usedSpace,
         avatar: user.avatar,
-        rootDirId: user.rootDir.id
+        rootDir: user.rootDir
       }
     });
   } catch (e) {
@@ -108,7 +108,7 @@ router.get("/auth", authMiddleware, async (req, res) => {
         diskSpace: user.diskSpace,
         usedSpace: user.usedSpace,
         avatar: user.avatar,
-        rootDirId: user.rootDir.id
+        rootDir: user.rootDir
       }
     });
   } catch (e) {
