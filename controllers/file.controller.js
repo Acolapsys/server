@@ -50,6 +50,40 @@ class FileController {
       return res.status(500).json(e);
     }
   }
+  async uploadFile(req, res) {
+    try {
+      const file = req.files.file;
+      const parent = await File.findByPk(req.body.parentId);
+      const user = await User.findByPk(req.user.id);
+
+      if (user.usedSpace + file.size > user.diskSpace) {
+        return res.status(400).json({ message: "Out of space" });
+      }
+
+      user.usedSpace += file.size;
+
+
+      file.path = parent ? `${parent.path}\\${file.name}` : file.name;
+      file.userId = user.id;
+      const type = file.name.split(".").pop();
+
+      const dbFile = await File.create({
+        name: file.name,
+        type,
+        path: parent?.path,
+        size: file.size,
+        parentId: parent?.id,
+        userId: req.user.id
+      });
+
+      await FileService.createFile(file);
+
+      await user.save();
+      return res.json(dbFile);
+    } catch (e) {
+      return res.status(400).json(e);
+    }
+  }
 }
 
 module.exports = new FileController();
