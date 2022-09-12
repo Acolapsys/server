@@ -1,5 +1,7 @@
 const { File, User } = require("../models/models");
 const FileService = require("../services/file.service");
+const path = require("path");
+const fs = require("fs");
 
 class FileController {
   async createDir(req, res) {
@@ -62,7 +64,6 @@ class FileController {
 
       user.usedSpace += file.size;
 
-
       file.path = parent ? `${parent.path}\\${file.name}` : file.name;
       file.userId = user.id;
       const type = file.name.split(".").pop();
@@ -82,6 +83,30 @@ class FileController {
       return res.json(dbFile);
     } catch (e) {
       return res.status(400).json(e);
+    }
+  }
+  async downloadFile(req, res) {
+    try {
+      const file = await File.findOne({
+        where: {
+          id: req.query.id,
+          userId: req.user.id
+        }
+      });
+      const filePath = path.join(
+        process.env.FILE_PATH,
+        String(req.user.id),
+        file.path,
+        file.name
+      );
+      console.log('2', filePath);
+      if (fs.existsSync(filePath)) {
+        return res.download(filePath, file.name);
+      }
+      return res.status(400).json({ message: "File not exist" });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Download file error" });
     }
   }
 }
