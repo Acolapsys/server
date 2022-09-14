@@ -99,7 +99,6 @@ class FileController {
         file.path,
         file.name
       );
-      console.log('2', filePath);
       if (fs.existsSync(filePath)) {
         return res.download(filePath, file.name);
       }
@@ -107,6 +106,29 @@ class FileController {
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Download file error" });
+    }
+  }
+  async delete(req, res) {
+    try {
+      const file = await File.findOne({
+        where: { id: req.query.id, userId: req.user.id }
+      });
+      if (req.query.type === "dir") {
+        await FileService.deleteDir(file);
+      } else {
+        await FileService.deleteFile(file);
+      }
+      await file.destroy();
+      return res.json({
+        message: req.query.type === "dir" ? "Directory deleted" : "File deleted"
+      });
+    } catch (e) {
+      return res.status(500).json({
+        message:
+          req.query.type === "dir"
+            ? "Delete directory error"
+            : "Delete file error"
+      });
     }
   }
 }

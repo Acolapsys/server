@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 
 class FileService {
   createDir(file) {
@@ -28,6 +29,51 @@ class FileService {
         }
       } catch (e) {
         return reject({ message: "File error" });
+      }
+    });
+  }
+  deleteFile(file) {
+    return new Promise((resolve, reject) => {
+      try {
+        if (file.type === "dir") {
+          return reject({ message: "This is a directory" });
+        }
+        const filePath = path.join(
+          process.env.FILE_PATH,
+          String(file.userId),
+          file.path,
+          file.name
+        );
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+
+        return resolve({ message: "File deleted" });
+      } catch (e) {
+        return reject({ message: "Delete file error" });
+      }
+    });
+  }
+  deleteDir(dir) {
+    return new Promise((resolve, reject) => {
+      try {
+        if (dir.type !== "dir") {
+          return reject({ message: "This is not directory" });
+        }
+        const dirPath = path.join(
+          process.env.FILE_PATH,
+          String(dir.userId),
+          dir.path,
+          dir.name
+        );
+        if (fs.existsSync(dirPath)) {
+          fs.rmSync(dirPath, { recursive: true, force: true });
+        }
+
+        return resolve({ message: "Directory deleted" });
+      } catch (e) {
+        console.log("12");
+        return reject({ message: "Delete directory service error" });
       }
     });
   }
