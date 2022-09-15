@@ -21,7 +21,7 @@ class FileController {
       if (!parentFile) {
         file.path = name;
       } else {
-        file.path = `${parentFile.path}\\${file.name}`;
+        file.path = path.join(parentFile.path, file.name);
       }
       await FileService.createDir(file);
       await file.save();
@@ -64,14 +64,14 @@ class FileController {
 
       user.usedSpace += file.size;
 
-      file.path = parent ? `${parent.path}\\${file.name}` : file.name;
+      file.path = parent ? path.join(parent.path, file.name) : file.name;
       file.userId = user.id;
       const type = file.name.split(".").pop();
 
       const dbFile = await File.create({
         name: file.name,
         type,
-        path: parent?.path,
+        path: file.path,
         size: file.size,
         parentId: parent?.id,
         userId: req.user.id
@@ -82,6 +82,7 @@ class FileController {
       await user.save();
       return res.json(dbFile);
     } catch (e) {
+      console.log(e);
       return res.status(400).json(e);
     }
   }
@@ -113,12 +114,20 @@ class FileController {
       const file = await File.findOne({
         where: { id: req.query.id, userId: req.user.id }
       });
+      if (!file) {
+        return res.status(400).json({
+          message:
+            req.query.type === "dir" ? "Directory not found" : "File not found"
+        });
+      }
       if (req.query.type === "dir") {
         await FileService.deleteDir(file);
+        console.log('dir', this);
+        await deleteDirWithSubs(file);
       } else {
         await FileService.deleteFile(file);
+        await file.destroy();
       }
-      await file.destroy();
       return res.json({
         message: req.query.type === "dir" ? "Directory deleted" : "File deleted"
       });
@@ -130,6 +139,19 @@ class FileController {
             : "Delete file error"
       });
     }
+  }
+}
+async function deleteDirWithSubs(dirOrFile) {
+  try {
+    console.log("1", dirOrFile);
+
+    const children = await File.findAll({ where: { parentId: dirOrFile.id } });
+    for (let i = 0; i < children.length; i++) {
+      await deleteDirWithSubs(children[i]);
+    }
+    await dirOrFile.destroy()
+  } catch (error) {
+    console.log('err', error);
   }
 }
 
