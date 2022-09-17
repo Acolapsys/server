@@ -97,8 +97,7 @@ class FileController {
       const filePath = path.join(
         process.env.FILE_PATH,
         String(req.user.id),
-        file.path,
-        file.name
+        file.path
       );
       if (fs.existsSync(filePath)) {
         return res.download(filePath, file.name);
