@@ -32,11 +32,15 @@ class FileController {
   }
   async getFiles(req, res) {
     try {
+      const { sort } = req.query;
+
       const files = await File.findAll({
         where: {
           userId: req.user?.id || null,
           parentId: req.query?.parentId || null
         },
+        order: sort ? [[sort, "ASC"]] : [],
+
         include: { model: File, as: "children" }
       });
       return res.json(files);
@@ -121,7 +125,7 @@ class FileController {
       }
       if (req.query.type === "dir") {
         await FileService.deleteDir(file);
-        console.log('dir', this);
+        console.log("dir", this);
         await deleteDirWithSubs(file);
       } else {
         await FileService.deleteFile(file);
@@ -148,9 +152,9 @@ async function deleteDirWithSubs(dirOrFile) {
     for (let i = 0; i < children.length; i++) {
       await deleteDirWithSubs(children[i]);
     }
-    await dirOrFile.destroy()
+    await dirOrFile.destroy();
   } catch (error) {
-    console.log('err', error);
+    console.log("err", error);
   }
 }
 
